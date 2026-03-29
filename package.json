@@ -1,0 +1,53 @@
+{
+  "name": "stigmergy-mcp",
+  "version": "0.1.0",
+  "description": "Stigmergic coordination layer for AI coding agents — digital pheromone traces via MCP",
+  "type": "module",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "bin": {
+    "stigmergy-mcp": "./dist/src/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "inspect": "npm run build && npx @modelcontextprotocol/inspector node dist/src/index.js",
+    "start": "node dist/src/index.js",
+    "lint": "tsc --noEmit",
+    "loc": "echo '=== Source ===' && find src -name '*.ts' | xargs wc -l && echo '=== Tests ===' && find tests -name '*.ts' | xargs wc -l && echo '=== Files ===' && find src -type f | wc -l",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "files": [
+    "dist/src"
+  ],
+  "keywords": [
+    "mcp",
+    "stigmergy",
+    "multi-agent",
+    "coordination",
+    "ai-agents",
+    "pheromone",
+    "swarm",
+    "claude-code"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "@rollup/rollup-darwin-arm64": "^4.60.0",
+    "better-sqlite3": "^11.7.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}
