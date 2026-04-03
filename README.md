@@ -27,7 +27,7 @@ Add as an MCP server in Claude Code:
 claude mcp add stigmergy -- node node_modules/stigmergy-mcp/dist/src/index.js
 
 # Or clone and build
-git clone <repo-url> && cd stigmergy-mcp
+git clone https://github.com/calabamatex/stigmergy-mcp.git && cd stigmergy-mcp
 npm install && npm run build
 claude mcp add stigmergy -- node dist/src/index.js
 ```

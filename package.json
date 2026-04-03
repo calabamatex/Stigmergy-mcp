@@ -33,7 +33,7 @@
     "swarm",
     "claude-code"
   ],
-  "author": "",
+  "author": "Ethan E. Allen",
   "license": "MIT",
   "engines": {
     "node": ">=18"
