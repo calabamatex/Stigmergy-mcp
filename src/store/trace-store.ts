@@ -25,6 +25,8 @@ import {
 } from './schema.js';
 
 const PRUNE_THRESHOLD = 0.01;
+const DECAY_MULTIPLIER = Math.log(1 / PRUNE_THRESHOLD); // ln(100) ≈ 4.605
+const DEFAULT_PRUNE_INTERVAL_MS = 60_000;
 
 const CREATE_TABLE = `
 CREATE TABLE IF NOT EXISTS traces (
@@ -49,8 +51,11 @@ CREATE INDEX IF NOT EXISTS idx_traces_created ON traces(created_at);
 
 export class TraceStore {
   private db: Database.Database;
+  private lastPruneAt = 0;
+  private pruneIntervalMs: number;
 
-  constructor(dbPath: string = ':memory:') {
+  constructor(dbPath: string = ':memory:', opts?: { pruneIntervalMs?: number }) {
+    this.pruneIntervalMs = opts?.pruneIntervalMs ?? DEFAULT_PRUNE_INTERVAL_MS;
     this.db = new Database(dbPath);
     this.db.pragma('journal_mode = WAL');
     this.db.exec(CREATE_TABLE);
@@ -153,17 +158,17 @@ export class TraceStore {
   }
 
   prune(): number {
-    const rows = this.db.prepare(`SELECT * FROM traces`).all() as Record<string, unknown>[];
-    const toDelete: string[] = [];
-    for (const row of rows) {
-      const eff = this.effectiveIntensity(row.intensity as number, row.decay_hours as number, row.created_at as string);
-      if (eff < PRUNE_THRESHOLD) toDelete.push(row.id as string);
-    }
-    if (toDelete.length > 0) {
-      const placeholders = toDelete.map(() => '?').join(',');
-      this.db.prepare(`DELETE FROM traces WHERE id IN (${placeholders})`).run(...toDelete);
-    }
-    return toDelete.length;
+    const now = Date.now();
+    if (now - this.lastPruneAt < this.pruneIntervalMs) return 0;
+    this.lastPruneAt = now;
+
+    // effective < 0.01 when elapsed_hours > decay_hours * ln(100)
+    const result = this.db.prepare(`
+      DELETE FROM traces
+      WHERE (julianday('now') - julianday(created_at)) * 24 > decay_hours * ?
+    `).run(DECAY_MULTIPLIER);
+
+    return result.changes;
   }
 
   close(): void {

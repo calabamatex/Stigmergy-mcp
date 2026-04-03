@@ -5,7 +5,7 @@ describe('TraceStore', () => {
   let store: TraceStore;
 
   beforeEach(() => {
-    store = new TraceStore(':memory:');
+    store = new TraceStore(':memory:', { pruneIntervalMs: 0 });
   });
 
   afterEach(() => {
