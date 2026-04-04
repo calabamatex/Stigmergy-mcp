@@ -18,11 +18,23 @@ importers:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@20.19.39)
 
+  packages/classifier:
+    dependencies:
+      '@stigmergy-benchmark/core':
+        specifier: workspace:*
+        version: link:../core
+
   packages/core:
     dependencies:
       zod:
         specifier: ^3.23.0
         version: 3.25.76
+
+  packages/llm-client:
+    dependencies:
+      '@stigmergy-benchmark/core':
+        specifier: workspace:*
+        version: link:../core
 
   packages/stats:
     dependencies:

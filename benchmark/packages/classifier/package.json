@@ -1,0 +1,17 @@
+{
+  "name": "@stigmergy-benchmark/classifier",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@stigmergy-benchmark/core": "workspace:*"
+  }
+}
