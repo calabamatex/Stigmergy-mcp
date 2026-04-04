@@ -1,5 +1,5 @@
 {
-  "name": "@stigmergy-benchmark/executors",
+  "name": "@stigmergy-benchmark/engine",
   "version": "0.1.0",
   "type": "module",
   "main": "dist/index.js",
@@ -13,9 +13,10 @@
   },
   "dependencies": {
     "@stigmergy-benchmark/core": "workspace:*",
+    "@stigmergy-benchmark/executors": "workspace:*",
+    "@stigmergy-benchmark/stats": "workspace:*",
+    "@stigmergy-benchmark/storage": "workspace:*",
     "@stigmergy-benchmark/llm-client": "workspace:*",
-    "@stigmergy-benchmark/classifier": "workspace:*",
-    "stigmergy-mcp": "file:../../..",
-    "@modelcontextprotocol/sdk": "^1.27.1"
+    "@stigmergy-benchmark/classifier": "workspace:*"
   }
 }

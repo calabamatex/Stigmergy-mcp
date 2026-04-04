@@ -30,6 +30,27 @@ importers:
         specifier: ^3.23.0
         version: 3.25.76
 
+  packages/engine:
+    dependencies:
+      '@stigmergy-benchmark/classifier':
+        specifier: workspace:*
+        version: link:../classifier
+      '@stigmergy-benchmark/core':
+        specifier: workspace:*
+        version: link:../core
+      '@stigmergy-benchmark/executors':
+        specifier: workspace:*
+        version: link:../executors
+      '@stigmergy-benchmark/llm-client':
+        specifier: workspace:*
+        version: link:../llm-client
+      '@stigmergy-benchmark/stats':
+        specifier: workspace:*
+        version: link:../stats
+      '@stigmergy-benchmark/storage':
+        specifier: workspace:*
+        version: link:../storage
+
   packages/executors:
     dependencies:
       '@modelcontextprotocol/sdk':
@@ -72,6 +93,12 @@ importers:
       '@types/better-sqlite3':
         specifier: ^7.6.12
         version: 7.6.13
+
+  packages/tasks:
+    dependencies:
+      '@stigmergy-benchmark/core':
+        specifier: workspace:*
+        version: link:../core
 
 packages:
 

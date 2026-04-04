@@ -318,6 +318,7 @@ export interface ComparisonConfig {
   model: string;
   temperature: number;
   promptCachingEnabled: boolean;
+  skipSingleAgent: boolean;
 }
 
 export interface ComparisonResult {
