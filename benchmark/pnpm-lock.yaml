@@ -24,6 +24,24 @@ importers:
         specifier: workspace:*
         version: link:../core
 
+  packages/cli:
+    dependencies:
+      '@stigmergy-benchmark/core':
+        specifier: workspace:*
+        version: link:../core
+      '@stigmergy-benchmark/engine':
+        specifier: workspace:*
+        version: link:../engine
+      '@stigmergy-benchmark/llm-client':
+        specifier: workspace:*
+        version: link:../llm-client
+      '@stigmergy-benchmark/storage':
+        specifier: workspace:*
+        version: link:../storage
+      '@stigmergy-benchmark/tasks':
+        specifier: workspace:*
+        version: link:../tasks
+
   packages/core:
     dependencies:
       zod:
