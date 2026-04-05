@@ -4,8 +4,7 @@
   "type": "module",
   "main": "dist/server.js",
   "scripts": {
-    "build": "tsc",
-    "build:frontend": "cd frontend && npx vite build --outDir ../dist/public",
+    "build": "tsc && cd frontend && npx vite build --outDir ../dist/public",
     "start": "node dist/server.js",
     "dev": "node dist/server.js",
     "test": "vitest run",
