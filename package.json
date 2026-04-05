@@ -18,7 +18,8 @@
     "start": "node dist/src/index.js",
     "lint": "tsc --noEmit",
     "loc": "echo '=== Source ===' && find src -name '*.ts' | xargs wc -l && echo '=== Tests ===' && find tests -name '*.ts' | xargs wc -l && echo '=== Files ===' && find src -type f | wc -l",
-    "prepublishOnly": "npm run build && npm test"
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test"
   },
   "files": [
     "dist/src"
