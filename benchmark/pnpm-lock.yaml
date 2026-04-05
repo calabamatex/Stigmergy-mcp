@@ -149,7 +149,7 @@ importers:
         specifier: workspace:*
         version: link:../llm-client
       stigmergy-mcp:
-        specifier: file:../../..
+        specifier: file:../../../
         version: file:..
 
   packages/llm-client:

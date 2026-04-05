@@ -22,8 +22,24 @@
     "prepublishOnly": "npm test"
   },
   "files": [
-    "dist/src"
+    "dist/src",
+    "src",
+    "tsconfig.json"
   ],
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./store": {
+      "types": "./dist/src/store/trace-store.d.ts",
+      "default": "./dist/src/store/trace-store.js"
+    },
+    "./server": {
+      "types": "./dist/src/server.d.ts",
+      "default": "./dist/src/server.js"
+    }
+  },
   "keywords": [
     "mcp",
     "stigmergy",

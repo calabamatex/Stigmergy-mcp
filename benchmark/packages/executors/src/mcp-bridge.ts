@@ -1,8 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
-import { TraceStore } from 'stigmergy-mcp/dist/src/store/trace-store.js';
-import { createServer } from 'stigmergy-mcp/dist/src/server.js';
+import { TraceStore } from 'stigmergy-mcp/store';
+import { createServer } from 'stigmergy-mcp/server';
 import type { ToolDefinition } from '@stigmergy-benchmark/core';
 
 /**
