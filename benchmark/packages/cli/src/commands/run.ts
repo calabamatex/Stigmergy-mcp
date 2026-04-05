@@ -3,7 +3,7 @@ import { ReportingLevel, RunType } from '@stigmergy-benchmark/core';
 import { getTask } from '@stigmergy-benchmark/tasks';
 import { ComparisonEngine } from '@stigmergy-benchmark/engine';
 import { BenchmarkStore } from '@stigmergy-benchmark/storage';
-import { MockLLMClient, AnthropicClient, OpenAIClient } from '@stigmergy-benchmark/llm-client';
+import { MockLLMClient, AnthropicClient, OpenAIClient, RetryLLMClient, RateLimitedLLMClient } from '@stigmergy-benchmark/llm-client';
 import type { LLMClient } from '@stigmergy-benchmark/llm-client';
 import type { ParsedArgs } from '../index.js';
 import { formatProgressLine, formatProvisionalStats } from '../format/progress.js';
@@ -75,16 +75,21 @@ export async function runCompare(args: ParsedArgs): Promise<void> {
 }
 
 function createClient(provider: string, seed?: number): LLMClient {
+  let client: LLMClient;
   switch (provider) {
     case 'mock':
       return new MockLLMClient({ seed: seed ?? 42, variance: 0.2 });
     case 'anthropic':
-      return new AnthropicClient();
+      client = new AnthropicClient();
+      break;
     case 'openai':
-      return new OpenAIClient();
+      client = new OpenAIClient();
+      break;
     default:
       throw new Error(`Unknown provider: ${provider}. Use: mock | anthropic | openai`);
   }
+  // Wrap real providers with retry + rate limiting
+  return new RateLimitedLLMClient(new RetryLLMClient(client));
 }
 
 function getDefaultModel(provider: string): string {

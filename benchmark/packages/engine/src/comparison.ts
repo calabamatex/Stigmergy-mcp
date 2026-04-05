@@ -14,6 +14,7 @@ import type { LLMClient } from '@stigmergy-benchmark/llm-client';
 import { aggregateStats, computePerTrialMetrics, calibrateCrossValidation } from '@stigmergy-benchmark/stats';
 import { BenchmarkStore } from '@stigmergy-benchmark/storage';
 import { crossValidateTrial } from './cross-validation.js';
+import { BenchmarkLogger } from './logger.js';
 
 export interface ComparisonCallbacks {
   onTrialStart?: (trialIndex: number, totalTrials: number) => void;
@@ -21,6 +22,7 @@ export interface ComparisonCallbacks {
   onRunComplete?: (trialIndex: number, runType: RunType) => void;
   onTrialComplete?: (trial: TrialResult, partialStats: AggregatedStats) => void;
   onError?: (trialIndex: number, error: Error) => void;
+  onLog?: (level: string, event: string, context?: Record<string, unknown>) => void;
 }
 
 /**
@@ -31,16 +33,23 @@ export class ComparisonEngine {
   private messagePassing = new MessagePassingExecutor();
   private stigmergy = new StigmergySwarmExecutor();
 
+  private logger: BenchmarkLogger;
+
   constructor(
     private store: BenchmarkStore,
     private client: LLMClient,
-  ) {}
+    verbose = false,
+  ) {
+    this.logger = new BenchmarkLogger(verbose);
+  }
 
   async runComparison(
     task: BenchmarkTask,
     config: ComparisonConfig,
     callbacks?: ComparisonCallbacks,
   ): Promise<ComparisonResult> {
+    this.validateConfig(task, config);
+
     const comparisonId = crypto.randomUUID();
     const trials: TrialResult[] = [];
     const perTrialMetrics: PerTrialMetrics[] = [];
@@ -53,6 +62,8 @@ export class ComparisonEngine {
       temperature: config.temperature,
       agentCount: task.agentCount,
     };
+
+    this.logger.info('comparison_start', { comparisonId, taskId: task.id, trialCount: config.trialCount });
 
     for (let i = 0; i < config.trialCount; i++) {
       callbacks?.onTrialStart?.(i, config.trialCount);
@@ -107,7 +118,20 @@ export class ComparisonEngine {
     };
 
     this.store.saveComparisonResult(result);
+    this.logger.info('comparison_complete', { comparisonId, trialCount: trials.length, errors: errors.length });
     return result;
+  }
+
+  private validateConfig(task: BenchmarkTask, config: ComparisonConfig): void {
+    if (!task.steps || task.steps.length === 0) {
+      throw new Error(`Task "${task.id}" has no steps defined`);
+    }
+    if (config.trialCount < 3) {
+      throw new Error(`Trial count must be >= 3 (got ${config.trialCount})`);
+    }
+    if (!config.model) {
+      throw new Error('Model name is required');
+    }
   }
 
   private async runSingleTrial(

@@ -1,5 +1,6 @@
 import type { CompletionRequest, CompletionResponse, ContentBlock } from '@stigmergy-benchmark/core';
 import type { LLMClient } from './client.js';
+import { ApiError } from './errors.js';
 
 /**
  * OpenAI API client. Makes real API calls to GPT models.
@@ -54,7 +55,7 @@ export class OpenAIClient implements LLMClient {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      throw new Error(`OpenAI API error ${response.status}: ${errorBody}`);
+      throw new ApiError(response.status, errorBody, 'OpenAI');
     }
 
     const data = await response.json() as {
