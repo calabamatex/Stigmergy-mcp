@@ -18,7 +18,7 @@ This is a NOVEL COORDINATION PRIMITIVE, not another framework. Ship tight or don
 
 ## Forbidden Actions
 
-- NEVER create documentation files beyond README.md
+- NEVER create documentation files beyond README.md and ARCHITECTURE.md
 - NEVER create a dashboard, CLI, plugin system, or configuration file loader
 - NEVER add a logging library — use console.error() to stderr per MCP convention
 - NEVER create "utils", "helpers", or "common" directories
