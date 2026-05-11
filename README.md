@@ -1,4 +1,4 @@
-# Swarm-Ledger-mcp
+# Stigmergy-mcp
 
 ![Stigmergy-MCP: Solving the Multi-Agent Scaling Crisis — infographic contrasting O(N²) direct-message overhead with O(N) stigmergic coordination, plus the four core MCP tools](docs/images/stigmergy-mcp-hero.png)
 
