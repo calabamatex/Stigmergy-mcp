@@ -166,6 +166,10 @@ const server = createServer(store);
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for internal design details and extension points.
 
+## Benchmarks
+
+The benchmarking harness — comparing stigmergic swarms against single-agent and message-passing baselines — lives in a separate repository: [calabamatex/Stigmergy-mcp-benchmark](https://github.com/calabamatex/Stigmergy-mcp-benchmark).
+
 ## Development
 
 ```bash
