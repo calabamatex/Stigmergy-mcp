@@ -4,6 +4,20 @@
 
 A shared signal layer that lets multiple AI coding agents coordinate without talking to each other. Built as a standalone [MCP](https://modelcontextprotocol.io/) server.
 
+
+## Why This Exists
+
+Multi-agent AI systems are expensive because every agent reads everything every other agent has said. Anthropic's own production multi-agent Research system [uses approximately 15 times more tokens than chat interactions](https://www.anthropic.com/engineering/multi-agent-research-system), and token usage by itself explains 80% of performance variance on the BrowseComp browsing evaluation. The cost is not the cognitive work each agent performs. The cost is the cumulative conversation history each agent ingests before it can do its slice of the work.
+
+This is a structural problem, not an implementation defect. In direct message-passing coordination, each agent in an N-agent pipeline reads what every predecessor produced. Per-run inter-agent token volume scales quadratically with agent count. Anthropic is explicit about the limit: "domains that require all agents to share the same context or involve many dependencies between agents are not a good fit for multi-agent systems today." Coding is one of those domains.
+
+The effect is measurable. The companion [Stigmergy-mcp-benchmark](https://github.com/calabamatex/Stigmergy-mcp-benchmark) project decomposes every API call into five token categories (content transfer, mechanism overhead, coordination instructions, task reasoning, system identity) and applies bootstrap confidence intervals, Wilcoxon signed-rank tests, and TOST equivalence testing across paired trials. The framework runs against Anthropic, OpenAI, or a mock provider. A full six-task run at FULL statistical tier costs roughly $20 to $40 in API spend on Claude Sonnet.
+
+Stigmergy-mcp replaces full conversation handoff with compact, decaying, area-keyed signals. Each agent reads what is relevant near where it is working, not the entire transcript of what came before. Inter-agent token volume scales linearly with agent count instead of quadratically. The cost curve flattens, and dependency-heavy domains like coding become viable for multi-agent coordination.
+
+This is a coordination primitive, not a framework, not an orchestrator, and not an agent runtime. It does one thing: it lets your agents leave traces instead of transcripts.
+
+
 ## What is Stigmergy?
 
 In ant colonies, ants coordinate without communicating directly. An ant leaves a pheromone trail on a path; other ants sense the trail and follow it. Strong trails attract more ants. Trails that aren't reinforced evaporate. The environment itself becomes the communication channel — no messages, no central coordinator.
