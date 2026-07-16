@@ -1,34 +1,45 @@
 # Stigmergy-mcp
 
-![Stigmergy-MCP: Solving the Multi-Agent Scaling Crisis — infographic contrasting O(N²) direct-message overhead with O(N) stigmergic coordination, plus the four core MCP tools](docs/images/stigmergy-mcp-hero.png)
+An MCP-compatible trace store for experimenting with indirect shared-state coordination among AI agents.
 
-A shared signal layer that lets multiple AI coding agents coordinate without talking to each other. Built as a standalone [MCP](https://modelcontextprotocol.io/) server.
+`stigmergy-mcp` is a coordination primitive rather than an agent framework, orchestrator, or runtime. Agents can deposit typed traces into a shared environment, retrieve traces near a task area, reinforce or weaken existing traces, and inspect high-intensity signals across a broader area.
 
+## Research Status
 
-## Why This Exists
+Trace-based coordination is a hypothesis under evaluation, not a proven solution to multi-agent scaling.
 
-Multi-agent AI systems are expensive because every agent reads everything every other agent has said. Anthropic's own production multi-agent Research system [uses approximately 15 times more tokens than chat interactions](https://www.anthropic.com/engineering/multi-agent-research-system), and token usage by itself explains 80% of performance variance on the BrowseComp browsing evaluation. The cost is not the cognitive work each agent performs. The cost is the cumulative conversation history each agent ingests before it can do its slice of the work.
+Under cumulative, non-summarizing, sequential handoff with approximately constant predecessor payloads, repeated context transfer can grow quadratically with agent count. Under bounded trace retrieval, bounded retrieved volume, and bounded operation frequency, trace-based coordination can grow approximately linearly. Those forms are conditional. Message passing can summarize, cache, prune, and route selectively, while trace size, retrieval breadth, mechanism overhead, and fidelity loss can grow with system scale.
 
-This is a structural problem, not an implementation defect. In direct message-passing coordination, each agent in an N-agent pipeline reads what every predecessor produced. Per-run inter-agent token volume scales quadratically with agent count. Anthropic is explicit about the limit: "domains that require all agents to share the same context or involve many dependencies between agents are not a good fit for multi-agent systems today." Coding is one of those domains.
+The companion [`Stigmergy-mcp-benchmark`](https://github.com/calabamatex/Stigmergy-mcp-benchmark) provides exploratory measurements. The current evidence does not establish a general crossover, matched-fidelity superiority, or a mechanism-specific benefit from decay and reinforcement.
 
-The effect is measurable. The companion [Stigmergy-mcp-benchmark](https://github.com/calabamatex/Stigmergy-mcp-benchmark) project decomposes every API call into five token categories (content transfer, mechanism overhead, coordination instructions, task reasoning, system identity) and applies bootstrap confidence intervals, Wilcoxon signed-rank tests, and TOST equivalence testing across paired trials. The framework runs against Anthropic, OpenAI, or a mock provider. A full six-task run at FULL statistical tier costs roughly $20 to $40 in API spend on Claude Sonnet.
+## When the Primitive May Help
 
-Stigmergy-mcp replaces full conversation handoff with compact, decaying, area-keyed signals. Each agent reads what is relevant near where it is working, not the entire transcript of what came before. Inter-agent token volume scales linearly with agent count instead of quadratically. The cost curve flattens, and dependency-heavy domains like coding become viable for multi-agent coordination.
+Trace coordination may be worth evaluating when:
 
-This is a coordination primitive, not a framework, not an orchestrator, and not an agent runtime. It does one thing: it lets your agents leave traces instead of transcripts.
+- task-relevant state is sparse and locally indexable;
+- downstream agents need selected state rather than full conversational replay;
+- trace payloads remain compact;
+- retrieval breadth remains bounded;
+- provenance and write controls can be enforced.
 
+Direct handoff, bounded summarization, or a generic shared workspace may be preferable when:
 
-## What is Stigmergy?
+- complete context is required;
+- agent count is low;
+- cache reuse makes repeated prefixes inexpensive;
+- state cannot be safely compressed;
+- trace retrieval would approach a full-store scan;
+- shared-state security controls are unavailable.
 
-In ant colonies, ants coordinate without communicating directly. An ant leaves a pheromone trail on a path; other ants sense the trail and follow it. Strong trails attract more ants. Trails that aren't reinforced evaporate. The environment itself becomes the communication channel — no messages, no central coordinator.
+## What Is Stigmergy?
 
-**stigmergy-mcp** brings this pattern to AI coding agents. Agents leave typed traces on file paths and module names:
+Stigmergy describes indirect coordination through state left in a shared environment. The implementation supports three trace types:
 
-- **attraction** — "this path worked well" (draws agents toward an area)
-- **danger** — "something is broken here" (warns agents away)
-- **info** — neutral annotation (context for future visitors)
+- **attraction** — a positive signal associated with an area
+- **danger** — a warning associated with an area
+- **info** — a neutral annotation
 
-Traces decay exponentially over time, so stale signals fade naturally and fresh, reinforced signals dominate. When multiple AI agents work on the same codebase, they can sense each other's traces and adapt — without a message bus, queue, or shared state protocol.
+Traces carry intensity, tags, metadata, and an exponential decay horizon. Other agents retrieve traces by area and effective intensity rather than by replaying a full transcript.
 
 ## Quick Start
 
@@ -38,12 +49,13 @@ Traces decay exponentially over time, so stale signals fade naturally and fresh,
 npm install stigmergy-mcp
 ```
 
-### Or build from source
+### Build from source
 
 ```bash
-git clone https://github.com/calabamatex/stigmergy-mcp.git
-cd stigmergy-mcp
-npm install && npm run build
+git clone https://github.com/calabamatex/Stigmergy-mcp.git
+cd Stigmergy-mcp
+npm install
+npm run build
 ```
 
 ### Add as an MCP server
@@ -59,140 +71,138 @@ claude mcp add stigmergy -- node dist/src/index.js
 ### Verify
 
 ```bash
-npm run inspect    # Opens MCP Inspector — confirm all 4 tools appear
+npm run inspect
 ```
 
-### Database
+## Database
 
-Traces persist to `./stigmergy.db` by default. Override with:
+Traces persist to `./stigmergy.db` by default.
 
 ```bash
-STIGMERGY_DB_PATH=/path/to/traces.db    # Custom file path
-STIGMERGY_DB_PATH=:memory:              # Ephemeral (no persistence)
+STIGMERGY_DB_PATH=/path/to/traces.db
+STIGMERGY_DB_PATH=:memory:
 ```
 
-The database is created automatically on first run.
+The database is created on first use.
 
-## Tools
+## MCP Tools
 
-stigmergy-mcp exposes 4 MCP tools. Any MCP-compatible client can call them.
+### `deposit_trace`
 
-### deposit_trace
-
-Leave a trace in the shared environment.
+Write a trace into the shared environment.
 
 | Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `area` | string | required | File path or module name (e.g. `"src/auth/session.ts"`) |
-| `action` | string | required | What happened (e.g. `"refactored session management"`) |
-| `agent_id` | string | required | Which agent is leaving this trace |
-| `trace_type` | `"attraction"` \| `"danger"` \| `"info"` | required | Signal type |
-| `intensity` | number (0-1) | 0.5 | Signal strength |
-| `decay_hours` | number | 24 | Hours until ~37% intensity |
-| `tags` | string[] | [] | Searchable labels |
-| `metadata` | object | {} | Arbitrary JSON payload |
+| --- | --- | --- | --- |
+| `area` | string | required | File path, module, or task area |
+| `action` | string | required | Event or observation represented by the trace |
+| `agent_id` | string | required | Originating agent identifier |
+| `trace_type` | `attraction`, `danger`, or `info` | required | Signal type |
+| `intensity` | number from 0 to 1 | 0.5 | Initial signal strength |
+| `decay_hours` | number | 24 | Exponential decay horizon |
+| `tags` | string array | empty | Searchable labels |
+| `metadata` | object | empty | Additional structured data |
 
-### sense_environment
+### `sense_environment`
 
-Read traces near a given area. Read-only.
+Read traces near a specified area.
 
 | Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `area` | string | required | File path or prefix to scan |
-| `radius` | integer | 2 | How many path segments to walk up for matching |
-| `min_intensity` | number (0-1) | 0.05 | Minimum effective intensity to include |
-| `trace_type` | enum | optional | Filter by type |
-| `tags` | string[] | optional | Filter to traces containing ALL of these tags |
-| `agent_id` | string | optional | Filter to traces from a specific agent |
+| --- | --- | --- | --- |
+| `area` | string | required | File path or prefix |
+| `radius` | integer | 2 | Number of path levels included in matching |
+| `min_intensity` | number from 0 to 1 | 0.05 | Minimum effective intensity |
+| `trace_type` | enum | optional | Filter by trace type |
+| `tags` | string array | optional | Require all supplied tags |
+| `agent_id` | string | optional | Filter by originating agent |
 
-**How radius works:** The `radius` parameter controls how broad the search is by walking up the path hierarchy. Given `area="src/auth/session.ts"`:
+Results are sorted by effective intensity.
 
-- `radius=0` → prefix `src/auth/session.ts/` (matches only children, not the file itself)
-- `radius=1` → prefix `src/auth/` (sibling files in the same directory)
-- `radius=2` → prefix `src/` (broader area)
-
-Returns traces sorted by effective intensity (descending).
-
-### reinforce_trace
+### `reinforce_trace`
 
 Strengthen or weaken an existing trace.
 
 | Parameter | Type | Description |
-|-----------|------|-------------|
-| `trace_id` | string | ID of trace to reinforce |
-| `delta` | number (-1 to 1) | Positive to strengthen, negative to weaken |
+| --- | --- | --- |
+| `trace_id` | string | Trace identifier |
+| `delta` | number from -1 to 1 | Positive strengthens; negative weakens |
 
-### get_gradient
+### `get_gradient`
 
-Return the strongest signals across a broad area — the "which direction should I look?" tool. Use this for exploration and orientation. Unlike `sense_environment` (which reads traces near a specific file), `get_gradient` scans a wide prefix and returns the top signals grouped by type.
+Return the strongest traces across a broad area.
 
 | Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `area` | string | required | Broad area prefix (e.g. `"src/"`) |
-| `limit` | integer | 5 | Max traces to return |
-
-Returns the top N traces by effective intensity. The `by_type` grouping only includes traces within the top N — not all traces in the area.
-
-## Example: Multi-Agent Workflow
-
-```
-Agent A (refactoring auth):
-  → deposit_trace(area: "src/auth/session.ts", action: "found XSS in session handler",
-                  trace_type: "danger", intensity: 0.8, tags: ["security"])
-
-Agent B (working nearby):
-  → sense_environment(area: "src/auth/login.ts", radius: 1)
-  ← sees danger trace on session.ts — avoids touching it, or fixes the issue
-  → reinforce_trace(trace_id: "...", delta: 0.15)  // confirms the danger
-
-Agent C (new to the codebase):
-  → get_gradient(area: "src/", limit: 5)
-  ← sees strongest signal is a danger on src/auth/session.ts — investigates first
-```
+| --- | --- | --- | --- |
+| `area` | string | required | Broad area prefix |
+| `limit` | integer | 5 | Maximum returned traces |
 
 ## Trace Lifecycle
 
-Traces decay exponentially. The effective intensity at any point:
+Effective intensity follows:
 
-```
+```text
 effective = intensity * exp(-elapsed_hours / decay_hours)
 ```
 
-With `decay_hours=24`, a trace retains ~37% intensity after 24 hours and ~14% after 48 hours. Short-lived warnings (`decay_hours=4`) fade in hours. Long-term memory (`decay_hours=168`) persists for about a week.
+With the default `decay_hours=24`, a trace retains approximately 37% of its original intensity after 24 hours and approximately 14% after 48 hours. Runs lasting only minutes are unlikely to exercise the decay mechanism materially. Claims about the value of decay or reinforcement therefore require long-horizon tests or explicit ablations.
 
-Traces below 1% effective intensity are automatically pruned during `deposit()` calls. They are also invisible to `sense_environment` and `get_gradient` below their respective thresholds, so expired traces never pollute query results.
+Traces below the pruning threshold are removed during deposit operations and are excluded from reads below the applicable query threshold.
+
+## Example Workflow
+
+```text
+Agent A:
+  deposit_trace(area: "src/auth/session.ts",
+                action: "found XSS in session handler",
+                trace_type: "danger",
+                intensity: 0.8,
+                tags: ["security"])
+
+Agent B:
+  sense_environment(area: "src/auth/login.ts", radius: 1)
+  reinforce_trace(trace_id: "...", delta: 0.15)
+
+Agent C:
+  get_gradient(area: "src/", limit: 5)
+```
 
 ## Programmatic Usage
 
-The package exports the store and server for embedding in your own code:
-
 ```typescript
 import { TraceStore } from 'stigmergy-mcp/store';
-import { createServer, startServer } from 'stigmergy-mcp/server';
+import { createServer } from 'stigmergy-mcp/server';
 
-// Use the store directly
 const store = new TraceStore('/path/to/traces.db');
-const trace = store.deposit({ area: 'src/foo.ts', action: 'refactored', agent_id: 'my-agent', trace_type: 'info', intensity: 0.5, decay_hours: 24, tags: [], metadata: {} });
-
-// Or create/start an MCP server with a custom store
 const server = createServer(store);
 ```
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for internal design details and extension points.
+See [`ARCHITECTURE.md`](ARCHITECTURE.md) for implementation details.
+
+## Security and Governance
+
+A writable shared trace store can become a prompt-injection, poisoning, and sensitive-data propagation surface. Production deployment should add controls appropriate to the environment, including:
+
+- authenticated writes and agent identity
+- provenance and append-only audit records
+- access control and tenant isolation
+- content validation and read-time sanitization
+- retention, deletion, and incident-response procedures
+- explicit trust labels for agent- and tool-generated state
+
+The package should not be interpreted as a complete production security control plane.
 
 ## Benchmarks
 
-The benchmarking harness — comparing stigmergic swarms against single-agent and message-passing baselines — lives in a separate repository: [calabamatex/Stigmergy-mcp-benchmark](https://github.com/calabamatex/Stigmergy-mcp-benchmark).
+The exploratory benchmarking harness lives at [`calabamatex/Stigmergy-mcp-benchmark`](https://github.com/calabamatex/Stigmergy-mcp-benchmark).
 
 ## Development
 
 ```bash
-npm run build          # Compile TypeScript
-npm run dev            # Compile in watch mode
-npm test               # Run all tests
-npm run test:coverage  # Run tests with coverage
-npm run loc            # Check source/test LOC and file count
-npm run inspect        # Launch MCP Inspector
+npm run build
+npm run dev
+npm test
+npm run test:coverage
+npm run loc
+npm run inspect
 ```
 
 ## License
