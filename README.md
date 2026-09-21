@@ -1,5 +1,9 @@
 # Stigmergy-mcp
 
+![Stigmergy-MCP infographic: quadratic direct-message overhead, the linear trace hypothesis, and the four core MCP tools](docs/images/stigmergy-mcp-hero.png)
+
+*The O(N) curve is a hypothesis: it holds while per-agent retrieval stays bounded. Phase 1 of the companion benchmark measured retrieved content per agent rising from about 0.6k to 3.7k tokens between 5 and 10 agents.*
+
 An MCP-compatible trace store for experimenting with indirect shared-state coordination among AI agents.
 
 `stigmergy-mcp` is a coordination primitive rather than an agent framework, orchestrator, or runtime. Agents can deposit typed traces into a shared environment, retrieve traces near a task area, reinforce or weaken existing traces, and inspect high-intensity signals across a broader area.
