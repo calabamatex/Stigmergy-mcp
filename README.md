@@ -1,8 +1,8 @@
 # Stigmergy-mcp
 
-![Stigmergy-MCP infographic: quadratic direct-message overhead, the linear trace hypothesis, and the four core MCP tools](docs/images/stigmergy-mcp-hero.png)
+![Infographic comparing message-passing and stigmergic coordination: accumulated predecessor outputs under full-history handoff, compact decaying traces in a shared environment, and Phase 1 token savings from 2 to 10 agents](docs/images/stigmergy-mcp-hero-v2.png)
 
-*The O(N) curve is a hypothesis: it holds while per-agent retrieval stays bounded. Phase 1 of the companion benchmark measured retrieved content per agent rising from about 0.6k to 3.7k tokens between 5 and 10 agents.*
+*Phase 1 measured the savings shown here at 6 and 10 agents (54% and 46% of inter-agent tokens), with content-transfer savings of about 91% at 5 to 7 agents and 72% at 10. The linear form holds while per-agent retrieval stays bounded: measured retrieved content per agent rose from about 0.6k to 3.7k tokens between 5 and 10 agents. The crossover position and the projection for longer-running agents are hypotheses for later phases. See the [companion benchmark](https://github.com/calabamatex/Stigmergy-mcp-benchmark) for scope and method.*
 
 An MCP-compatible trace store for experimenting with indirect shared-state coordination among AI agents.
 
